@@ -12,6 +12,12 @@ namespace NanatsuDle.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Character>().ToTable("Characters");
+            modelBuilder.Entity<Gender>().ToTable("Genders");
+            modelBuilder.Entity<Race>().ToTable("Races");
+            modelBuilder.Entity<Arc>().ToTable("Arcs");
+            modelBuilder.Entity<Affiliation>().ToTable("Affiliations");
+            modelBuilder.Entity<HairColor>().ToTable("HairColors");
+            modelBuilder.Entity<TypeOfSkill>().ToTable("TypesOfSkills");
         }
     }
 }
