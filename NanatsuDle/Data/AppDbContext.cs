@@ -8,6 +8,12 @@ namespace NanatsuDle.Data
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<Character> Characters { get; set; }
+        public DbSet<Affiliation> Affiliations { get; set; }
+        public DbSet<Arc> Arcs { get; set; }
+        public DbSet<Gender> Genders { get; set; }
+        public DbSet<HairColor> HairColors { get; set; }
+        public DbSet<Race> Races { get; set; }
+        public DbSet<TypeOfSkill> TypesOfSkills { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

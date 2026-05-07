@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NanatsuDle.Data;
-using NanatsuDle.Models;
 
 namespace NanatsuDle.Controllers
 {
@@ -58,6 +57,7 @@ namespace NanatsuDle.Controllers
             // Usamos el día del año como semilla para que sea consistente
             var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear;
             var index = seed % count;
+
 
             var character = await _context.Characters
                 .OrderBy(c => c.Id)
@@ -256,6 +256,216 @@ namespace NanatsuDle.Controllers
             });
         }
 
+        // GET api/characters/daily3
+        [HttpGet("daily3")]
+        public async Task<IActionResult> GetDaily3()
+        {
+            var count = await _context.Characters.CountAsync();
+            if (count == 0)
+                return NotFound("No hay personajes en la base de datos.");
+
+            var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow, "SA Pacific Standard Time");
+
+            var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 1000;
+            var index = seed % count;
+
+            var character = await _context.Characters
+                .OrderBy(c => c.Id)
+                .Skip(index)
+                .Include(c => c.Gender)
+                .Include(c => c.Race)
+                .Include(c => c.HairColor)
+                .Include(c => c.Affiliation)
+                .Select(c => new
+                {
+                    c.Id,
+                    c.ImageUrl,
+                    c.Height,
+                    Race = c.Race.Name,
+                    HairColor = c.HairColor.Name,
+                    Gender = c.Gender.Name,
+                    Affiliation = c.Affiliation.Name,
+                })
+                .FirstOrDefaultAsync();
+
+            return Ok(character);
+        }
+
+        [HttpPost("guess3")]
+        public async Task<IActionResult> Guess3([FromBody] Guess3Request request)
+        {
+            var target = await _context.Characters.FindAsync(request.TargetId);
+            if (target == null)
+                return NotFound("Personaje no encontrado.");
+
+            var guess = await _context.Characters
+                .Where(c => string.Equals(c.Name.Trim(), request.Answer.Trim()))
+                .FirstOrDefaultAsync();
+
+            var isCorrect = string.Equals(
+                target.Name.Trim(),
+                request.Answer.Trim(),
+                StringComparison.OrdinalIgnoreCase
+            );
+
+            return Ok(new
+            {
+                isCorrect,
+                correctName = target.Name,
+                correctImageUrl = target.ImageUrl,
+                imageUrl = guess?.ImageUrl ?? null
+            });
+        }
+
+        [HttpGet("row-game3")]
+        public async Task<IActionResult> GetRowGame3([FromQuery] int attempts)
+        {
+            var count = await _context.Characters.CountAsync();
+            if (count == 0)
+                return NotFound();
+
+            var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow, "SA Pacific Standard Time");
+
+            var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 1000;
+            var index = seed % count;
+
+            var character = await _context.Characters
+                .OrderBy(c => c.Id)
+                .Skip(index)
+                .Include(c => c.Gender)
+                .Include(c => c.Race)
+                .Include(c => c.HairColor)
+                .Include(c => c.Affiliation)
+                .FirstOrDefaultAsync();
+
+            if (character == null)
+                return NotFound();
+
+            var hint = new RowResult();
+            if (attempts >= 0) hint.HairColor = character.HairColor.Name;
+            if (attempts >= 1) hint.Height = character.Height;
+            if (attempts >= 2) hint.Race = character.Race.Name;
+            if (attempts >= 3) hint.Gender = character.Gender.Name;
+            if (attempts >= 4) hint.Affiliation = character.Affiliation.Name;
+
+            return Ok(hint);
+        }
+
+        private async Task<(string nombre, string tipo)> GetCategoriaDiariaAsync()
+        {
+            var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow, "SA Pacific Standard Time");
+
+            var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 1500;
+
+            string[] categorias = { "Affiliation", "Arc", "Gender", "HairColor", "Race", "TypeOfSkill" };
+            var tipo = categorias[seed % categorias.Length];
+
+            string nombre = tipo switch
+            {
+                "Affiliation" => (await _context.Affiliations
+                    .OrderBy(a => a.Id)
+                    .Skip(seed % await _context.Affiliations.CountAsync())
+                    .Select(a => a.Name)
+                    .FirstOrDefaultAsync())!,
+
+                "Arc" => (await _context.Arcs
+                    .OrderBy(a => a.Id)
+                    .Skip(seed % await _context.Arcs.CountAsync())
+                    .Select(a => a.Name)
+                    .FirstOrDefaultAsync())!,
+
+                "Gender" => (await _context.Genders
+                    .OrderBy(g => g.Id)
+                    .Skip(seed % await _context.Genders.CountAsync())
+                    .Select(g => g.Name)
+                    .FirstOrDefaultAsync())!,
+
+                "HairColor" => (await _context.HairColors
+                    .OrderBy(h => h.Id)
+                    .Skip(seed % await _context.HairColors.CountAsync())
+                    .Select(h => h.Name)
+                    .FirstOrDefaultAsync())!,
+
+                "Race" => (await _context.Races
+                    .OrderBy(r => r.Id)
+                    .Skip(seed % await _context.Races.CountAsync())
+                    .Select(r => r.Name)
+                    .FirstOrDefaultAsync())!,
+
+                "TypeOfSkill" => (await _context.TypesOfSkills
+                    .OrderBy(t => t.Id)
+                    .Skip(seed % await _context.TypesOfSkills.CountAsync())
+                    .Select(t => t.Name)
+                    .FirstOrDefaultAsync())!,
+            };
+
+            return (nombre, tipo);
+        }
+
+        [HttpGet("daily4")]
+        public async Task<IActionResult> GetDaily4()
+        {
+            return Ok(new { ready = true });
+        }
+
+        [HttpPost("guess-category")]
+        public async Task<IActionResult> GuessCategory([FromBody] Guess4Request request)
+        {
+            var (nombre, tipo) = await GetCategoriaDiariaAsync();
+
+            var isCorrect = string.Equals(nombre.Trim(), request.AnswerValue.Trim(),
+                                          StringComparison.OrdinalIgnoreCase)
+                         && string.Equals(tipo.Trim(), request.AnswerTipo.Trim(),
+                                          StringComparison.OrdinalIgnoreCase);
+
+            return Ok(new
+            {
+                isCorrect,
+                correctCategory = nombre,
+                correctTipo = tipo,
+            });
+        }
+
+        [HttpPost("guess4")]
+        public async Task<IActionResult> Guess4([FromBody] GuessRequest request)
+        {
+            var (nombre, tipo) = await GetCategoriaDiariaAsync();
+
+            var guess = await _context.Characters
+                .Include(c => c.Gender)
+                .Include(c => c.Race)
+                .Include(c => c.Arc)
+                .Include(c => c.HairColor)
+                .Include(c => c.Affiliation)
+                .Include(c => c.TypeOfSkill)
+                .FirstOrDefaultAsync(c => c.Id == request.GuessId);
+
+            if (guess == null)
+                return NotFound("Personaje no encontrado.");
+
+            FieldResult comparacion = tipo switch
+            {
+                "Gender" => CompareExact(guess.Gender.Name, nombre),
+                "Race" => CompareExact(guess.Race.Name, nombre),
+                "HairColor" => CompareExact(guess.HairColor.Name, nombre),
+                "Arc" => CompareExact(guess.Arc.Name, nombre),
+                "Affiliation" => CompareMulti(guess.Affiliation.Name, nombre),
+                "TypeOfSkill" => CompareMulti(guess.TypeOfSkill.Name, nombre)
+            };
+
+            return Ok(new
+            {
+                guessId = guess.Id,
+                guessName = guess.Name,
+                guessImageUrl = guess.ImageUrl,
+                resultado = comparacion,
+                tipo
+            });
+        }
+
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] string name)
         {
@@ -332,11 +542,25 @@ namespace NanatsuDle.Controllers
         public int TargetId { get; set; }
         public int GuessId { get; set; }
     }
+
     public class Guess2Request
     {
         public int TargetId { get; set; }
         public string Answer { get; set; } = string.Empty;
     }
+
+    public class Guess3Request
+    {
+        public int TargetId { get; set; }
+        public string Answer { get; set; } = string.Empty;
+    }
+
+    public class Guess4Request
+    {
+        public string AnswerTipo { get; set; } = string.Empty;
+        public string AnswerValue { get; set; } = string.Empty;
+    }
+
     public class FieldResult
     {
         public string Value { get; set; } = string.Empty;
@@ -359,9 +583,28 @@ namespace NanatsuDle.Controllers
         public FieldResult Arc { get; set; } = new();
     }
 
+    public class GuessResultCategory
+    {
+        public FieldResult Gender { get; set; } = new();
+        public FieldResult Race { get; set; } = new();
+        public FieldResult HairColor { get; set; } = new();
+        public FieldResult Affiliation { get; set; } = new();
+        public FieldResult TypeOfSkill { get; set; } = new();
+        public FieldResult Arc { get; set; } = new();
+    }
+
     public class HintResult
     {
         public string? Magic { get; set; } = null;
         public string? FirstAppearance { get; set; } = null;
+    }
+
+    public class RowResult
+    {
+        public int? Height { get; set; } = null;
+        public string? Race { get; set; } = null;
+        public string? HairColor { get; set; } = null;
+        public string? Gender { get; set; } = null;
+        public string? Affiliation { get; set; } = null;
     }
 }
