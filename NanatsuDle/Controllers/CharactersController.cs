@@ -15,16 +15,36 @@ namespace NanatsuDle.Controllers
             _context = context;
         }
 
-        [HttpGet("random")]
-        public async Task<IActionResult> GetRandom()
+        [HttpGet("daily-date")]
+        public IActionResult GetDailyDate()
+        {
+            var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow, "SA Pacific Standard Time");
+
+            return Ok(new
+            {
+                date = colombiaTime.ToString("yyyy-MM-dd")
+            });
+        }
+
+        // GET api/characters/daily
+        [HttpGet("daily")]
+        public async Task<IActionResult> GetDaily()
         {
             var count = await _context.Characters.CountAsync();
             if (count == 0)
                 return NotFound("No hay personajes en la base de datos.");
 
-            var randomIndex = new Random().Next(0, count);
+            var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
+                DateTime.UtcNow, "SA Pacific Standard Time");
+
+            var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear;
+
+            var random = new Random(seed);
+            var randomIndex = random.Next(0, count);
 
             var character = await _context.Characters
+                .OrderBy(c => c.Id)
                 .Skip(randomIndex)
                 .Select(c => new
                 {
@@ -42,60 +62,6 @@ namespace NanatsuDle.Controllers
 
             return Ok(character);
         }
-        // GET api/characters/daily
-        [HttpGet("daily")]
-        public async Task<IActionResult> GetDaily()
-        {
-            var count = await _context.Characters.CountAsync();
-            if (count == 0)
-                return NotFound("No hay personajes en la base de datos.");
-
-            // Hora Colombia = UTC-5
-            var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
-                DateTime.UtcNow, "SA Pacific Standard Time");
-
-            // Usamos el día del año como semilla para que sea consistente
-            var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear;
-            var index = seed % count;
-
-
-            var character = await _context.Characters
-                .OrderBy(c => c.Id)
-                .Skip(index)
-                .Include(c => c.Gender)
-                .Include(c => c.Race)
-                .Include(c => c.Arc)
-                .Include(c => c.HairColor)
-                .Include(c => c.Affiliation)
-                .Include(c => c.TypeOfSkill)
-                .Select(c => new
-                {
-                    c.Id,
-                    c.ImageUrl,
-                    Gender = c.Gender.Name,
-                    Race = c.Race.Name,
-                    Arc = c.Arc.Name,
-                    HairColor = c.HairColor.Name,
-                    Affiliation = c.Affiliation.Name,
-                    c.Height,
-                    TypeOfSkill = c.TypeOfSkill.Name
-                })
-                .FirstOrDefaultAsync();
-
-            return Ok(character);
-        }
-
-        [HttpGet("daily-date")]
-        public IActionResult GetDailyDate()
-        {
-            var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
-                DateTime.UtcNow, "SA Pacific Standard Time");
-
-            return Ok(new
-            {
-                date = colombiaTime.ToString("yyyy-MM-dd")
-            });
-        }
 
         // GET api/characters/daily-hint?attempts=5
         [HttpGet("daily-hint")]
@@ -109,11 +75,12 @@ namespace NanatsuDle.Controllers
                 DateTime.UtcNow, "SA Pacific Standard Time");
 
             var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear;
-            var index = seed % count;
+            var random = new Random(seed);
+            var randomIndex = random.Next(0, count);
 
             var character = await _context.Characters
                 .OrderBy(c => c.Id)
-                .Skip(index)
+                .Skip(randomIndex)
                 .Include(c => c.Gender)
                 .Include(c => c.Race)
                 .Include(c => c.Arc)
@@ -143,11 +110,12 @@ namespace NanatsuDle.Controllers
                 DateTime.UtcNow, "SA Pacific Standard Time");
 
             var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 500;
-            var index = seed % count;
+            var random = new Random(seed);
+            var randomIndex = random.Next(0, count);
 
             var character = await _context.Characters
                 .OrderBy(c => c.Id)
-                .Skip(index)
+                .Skip(randomIndex)
                 .FirstOrDefaultAsync();
 
             if (character == null)
@@ -216,11 +184,12 @@ namespace NanatsuDle.Controllers
                 DateTime.UtcNow, "SA Pacific Standard Time");
 
             var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 500;
-            var index = seed % count;
+            var random = new Random(seed);
+            var randomIndex = random.Next(0, count);
 
             var character = await _context.Characters
                 .OrderBy(c => c.Id)
-                .Skip(index)
+                .Skip(randomIndex)
                 .Select(c => new
                 {
                     c.Id,
@@ -268,11 +237,12 @@ namespace NanatsuDle.Controllers
                 DateTime.UtcNow, "SA Pacific Standard Time");
 
             var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 1000;
-            var index = seed % count;
+            var random = new Random(seed);
+            var randomIndex = random.Next(0, count);
 
             var character = await _context.Characters
                 .OrderBy(c => c.Id)
-                .Skip(index)
+                .Skip(randomIndex)
                 .Include(c => c.Gender)
                 .Include(c => c.Race)
                 .Include(c => c.HairColor)
@@ -329,11 +299,12 @@ namespace NanatsuDle.Controllers
                 DateTime.UtcNow, "SA Pacific Standard Time");
 
             var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 1000;
-            var index = seed % count;
+            var random = new Random(seed);
+            var randomIndex = random.Next(0, count);
 
             var character = await _context.Characters
                 .OrderBy(c => c.Id)
-                .Skip(index)
+                .Skip(randomIndex)
                 .Include(c => c.Gender)
                 .Include(c => c.Race)
                 .Include(c => c.HairColor)
@@ -430,7 +401,7 @@ namespace NanatsuDle.Controllers
         }
 
         [HttpPost("guess4")]
-        public async Task<IActionResult> Guess4([FromBody] GuessRequest request)
+        public async Task<IActionResult> Guess4([FromBody] Guess4CharacterRequest request)
         {
             var (nombre, tipo) = await GetCategoriaDiariaAsync();
 
@@ -453,7 +424,8 @@ namespace NanatsuDle.Controllers
                 "HairColor" => CompareExact(guess.HairColor.Name, nombre),
                 "Arc" => CompareExact(guess.Arc.Name, nombre),
                 "Affiliation" => CompareMulti(guess.Affiliation.Name, nombre),
-                "TypeOfSkill" => CompareMulti(guess.TypeOfSkill.Name, nombre)
+                "TypeOfSkill" => CompareMulti(guess.TypeOfSkill.Name, nombre),
+                _ => new FieldResult { Value = "", Status = "incorrect" }
             };
 
             return Ok(new
@@ -559,6 +531,10 @@ namespace NanatsuDle.Controllers
     {
         public string AnswerTipo { get; set; } = string.Empty;
         public string AnswerValue { get; set; } = string.Empty;
+    }
+    public class Guess4CharacterRequest
+    {
+        public int GuessId { get; set; }
     }
 
     public class FieldResult
