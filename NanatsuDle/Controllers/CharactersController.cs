@@ -93,8 +93,9 @@ namespace NanatsuDle.Controllers
                 return NotFound();
 
             var hint = new HintResult();
-            if (attempts >= 5) hint.Magic = character.Magic;
-            if (attempts >= 7) hint.FirstAppearance = character.FirstAppearance;
+            if (attempts >= 5) hint.FirstAppearance = character.FirstAppearance;
+            if (attempts >= 7) hint.Magic = character.Magic;
+            
 
             return Ok(hint);
         }
@@ -122,8 +123,8 @@ namespace NanatsuDle.Controllers
                 return NotFound();
 
             var hint = new HintResult();
-            if (attempts >= 5) hint.Magic = character.Magic;
-            if (attempts >= 7) hint.FirstAppearance = character.FirstAppearance;
+            if (attempts >= 5) hint.FirstAppearance = character.FirstAppearance;
+            if (attempts >= 7) hint.Magic = character.Magic;
 
             return Ok(hint);
         }
@@ -324,14 +325,15 @@ namespace NanatsuDle.Controllers
             return Ok(hint);
         }
 
-        private async Task<(string nombre, string tipo)> GetCategoriaDiariaAsync()
+        [HttpGet("daily-category")]
+        public async Task<(string nombre, string tipo)> GetCategoriaDiariaAsync()
         {
             var colombiaTime = TimeZoneInfo.ConvertTimeBySystemTimeZoneId(
                 DateTime.UtcNow, "SA Pacific Standard Time");
 
             var seed = colombiaTime.Year * 1000 + colombiaTime.DayOfYear + 1500;
 
-            string[] categorias = { "Affiliation", "Arc", "Gender", "HairColor", "Race", "TypeOfSkill" };
+            string[] categorias = { "Affiliation", "Gender", "HairColor", "Race"};
             var tipo = categorias[seed % categorias.Length];
 
             string nombre = tipo switch
@@ -339,12 +341,6 @@ namespace NanatsuDle.Controllers
                 "Affiliation" => (await _context.Affiliations
                     .OrderBy(a => a.Id)
                     .Skip(seed % await _context.Affiliations.CountAsync())
-                    .Select(a => a.Name)
-                    .FirstOrDefaultAsync())!,
-
-                "Arc" => (await _context.Arcs
-                    .OrderBy(a => a.Id)
-                    .Skip(seed % await _context.Arcs.CountAsync())
                     .Select(a => a.Name)
                     .FirstOrDefaultAsync())!,
 
@@ -364,12 +360,6 @@ namespace NanatsuDle.Controllers
                     .OrderBy(r => r.Id)
                     .Skip(seed % await _context.Races.CountAsync())
                     .Select(r => r.Name)
-                    .FirstOrDefaultAsync())!,
-
-                "TypeOfSkill" => (await _context.TypesOfSkills
-                    .OrderBy(t => t.Id)
-                    .Skip(seed % await _context.TypesOfSkills.CountAsync())
-                    .Select(t => t.Name)
                     .FirstOrDefaultAsync())!,
             };
 
@@ -408,10 +398,8 @@ namespace NanatsuDle.Controllers
             var guess = await _context.Characters
                 .Include(c => c.Gender)
                 .Include(c => c.Race)
-                .Include(c => c.Arc)
                 .Include(c => c.HairColor)
                 .Include(c => c.Affiliation)
-                .Include(c => c.TypeOfSkill)
                 .FirstOrDefaultAsync(c => c.Id == request.GuessId);
 
             if (guess == null)
@@ -422,9 +410,7 @@ namespace NanatsuDle.Controllers
                 "Gender" => CompareExact(guess.Gender.Name, nombre),
                 "Race" => CompareExact(guess.Race.Name, nombre),
                 "HairColor" => CompareExact(guess.HairColor.Name, nombre),
-                "Arc" => CompareExact(guess.Arc.Name, nombre),
                 "Affiliation" => CompareMulti(guess.Affiliation.Name, nombre),
-                "TypeOfSkill" => CompareMulti(guess.TypeOfSkill.Name, nombre),
                 _ => new FieldResult { Value = "", Status = "incorrect" }
             };
 
@@ -447,6 +433,7 @@ namespace NanatsuDle.Controllers
             var results = await _context.Characters
                 .Where(c => c.Name.Contains(name))
                 .Select(c => new { c.Id, c.Name, c.ImageUrl })
+                .OrderBy(c => c.Name)
                 .ToListAsync();
 
             return Ok(results);

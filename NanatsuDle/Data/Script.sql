@@ -487,7 +487,7 @@ VALUES
 (SELECT Id FROM TypesOfSkills WHERE Name='Ofensivo, Apoyo')),
 
 ('Gerheade', 'https://res.cloudinary.com/dsidu0tej/image/upload/v1778216008/The-Seven-Deadly-Sins-Gerheade-Adviser-of-the-Fairy-King_lbenxf.avif', 
-'https://res.cloudinary.com/dsidu0tej/image/upload/v1778216012/Gerheade_en_el_pasado_Anime_p4o6bj.webp', 162, 'Guardian', 'Capitulo 34',
+'https://res.cloudinary.com/dsidu0tej/image/upload/v1780722712/Captura_de_pantalla_2026-06-06_001124_pgorgr.png', 162, 'Guardian', 'Capitulo 34',
 (SELECT Id FROM Genders WHERE Name='Femenino'),
 (SELECT Id FROM Races WHERE Name='Hada'),
 (SELECT Id FROM Arcs WHERE Name='Revival of The Commandments'),
@@ -568,7 +568,7 @@ VALUES
 (SELECT Id FROM TypesOfSkills WHERE Name='Ofensivo')),
 
 ('Chandler', 'https://res.cloudinary.com/dsidu0tej/image/upload/v1778216836/97739_400_nss38a.webp',
-'https://res.cloudinary.com/dsidu0tej/image/upload/v1778216999/whos-the-better-mage-chandler-or-gowther-v0-qtb37umt7ecc1_gkwsf3.jpg', 198, 'Full Counter', 'Capitulo 66',
+'https://res.cloudinary.com/dsidu0tej/image/upload/v1778216999/whos-the-better-mage-chandler-or-gowther-v0-qtb37umt7ecc1_gkwsf3.jpg', 165, 'Full Counter', 'Capitulo 66',
 (SELECT Id FROM Genders WHERE Name='Masculino'),
 (SELECT Id FROM Races WHERE Name='Demonio'),
 (SELECT Id FROM Arcs WHERE Name='Wrath of the Gods'),
@@ -658,7 +658,7 @@ VALUES
 (SELECT Id FROM TypesOfSkills WHERE Name='Ofensivo')),
 
 ('Dahlia', 'https://res.cloudinary.com/dsidu0tej/image/upload/v1778239732/037aba0ec8d048e65c9bd16b44916a5d_bjciwp.jpg', 
-'https://res.cloudinary.com/dsidu0tej/image/upload/v1778239747/Dahlia_NNT-MPLL_sgzhpz.webp', 160, 'Disaster', 'La Maldicion de la Luz',
+'https://res.cloudinary.com/dsidu0tej/image/upload/v1778239747/Dahlia_NNT-MPLL_sgzhpz.webp', 230, 'Disaster', 'La Maldicion de la Luz',
 (SELECT Id FROM Genders WHERE Name='Masculino'),
 (SELECT Id FROM Races WHERE Name='Hada'),
 (SELECT Id FROM Arcs WHERE Name='Pelicula'),
@@ -667,7 +667,7 @@ VALUES
 (SELECT Id FROM TypesOfSkills WHERE Name='Ofensivo')),
 
 ('Dubs', 'https://res.cloudinary.com/dsidu0tej/image/upload/v1778239813/images_lluncg.jpg', 
-'https://res.cloudinary.com/dsidu0tej/image/upload/v1778239822/Dubs_Movie_a6pc03.webp', 800, 'Desconocido', 'La Maldicion de la Luz',
+'https://res.cloudinary.com/dsidu0tej/image/upload/v1778239822/Dubs_Movie_a6pc03.webp', 260, 'Desconocido', 'La Maldicion de la Luz',
 (SELECT Id FROM Genders WHERE Name='Masculino'),
 (SELECT Id FROM Races WHERE Name='Gigante'),
 (SELECT Id FROM Arcs WHERE Name='Pelicula'),
